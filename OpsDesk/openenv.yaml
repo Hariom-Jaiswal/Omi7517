@@ -1,0 +1,5 @@
+name: "OpsDesk"
+description: "A real-world email and task operations workflow for training AI agents on complex scheduling and multi-priority inboxes."
+entrypoint: "app:app"
+observation_space: "inbox (emails), tasks, calendar"
+action_space: "classify_email, extract_task, schedule_meeting, reply_email, ignore_email"
