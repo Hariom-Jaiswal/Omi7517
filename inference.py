@@ -22,9 +22,15 @@ def run_inference():
     terminated = False
     step_num = 1
     rewards = []
+    history = []
     
     while not terminated:
+        history_block = "\n".join(history[-4:]) if history else "None"
         prompt = f"""You are an AI operations assistant handling emails.
+Step: {step_num}
+Previous actions:
+{history_block}
+
 Current Observation: {obs.model_dump_json(indent=2)}
 
 Available Actions: classify_email, extract_task, schedule_meeting, reply_email, ignore_email.
@@ -37,6 +43,8 @@ Return JSON ONLY in this format: {{"action_type": "...", "email_id": "...", "met
                 response_format={"type": "json_object"}
             )
             content = resp.choices[0].message.content or "{}"
+            # Clean possible markdown wrap to ensure valid JSON parsing
+            content = content.replace("```json", "").replace("```", "").strip()
             action_data = json.loads(content)
             action = Action(**action_data)
             error_val = "null"
@@ -48,6 +56,8 @@ Return JSON ONLY in this format: {{"action_type": "...", "email_id": "...", "met
         rewards.append(reward.value)
         action_str = f"{action.action_type}({action.email_id})"
         done_val = str(terminated).lower()
+        
+        history.append(f"Step {step_num}: Action={action_str}, Reward={reward.value:.2f}")
         
         print(f"[STEP] step={step_num} action={action_str} reward={reward.value:.2f} done={done_val} error={error_val}", flush=True)
         step_num += 1
